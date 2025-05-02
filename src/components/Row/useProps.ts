@@ -1,22 +1,16 @@
 import { useEffect, useState } from "react";
 import axios from "../../axios";
-
-// ②データの整形
-export type Movie = {
-  id: string;
-  name: string;
-  poster_path: string;
-  backdrop_path: string;
-};
+import { Movie } from "../../type";
+import { requests } from "../../request";
 
 export const useProps = (fetchUrl: string) => {
   const [movies, setMovies] = useState<Movie[]>([]);
+  // 追加
+  const [trailerUrl, setTrailerUrl] = useState<string | null>("");
 
-  // ①APIの取得はuseEffectを使う
   useEffect(() => {
     async function fetchData() {
-       const request = await axios.get(fetchUrl);
-       // ②データの整形
+      const request = await axios.get(fetchUrl);
       const movies = request.data.results.map((movie: Movie) => ({
         id: movie.id,
         name: movie.name,
@@ -29,5 +23,19 @@ export const useProps = (fetchUrl: string) => {
     fetchData();
   }, [fetchUrl]);
 
-  return movies;
+  // 追加
+  const handleClick = async (movie: Movie) => {
+    if (trailerUrl) {
+      setTrailerUrl("");
+    } else {
+      const moviePlayUrl = await axios.get(requests.fetchMovieVideos(movie.id));
+      setTrailerUrl(moviePlayUrl.data.results[0]?.key);
+    }
+  };
+
+  return {
+    movies,
+    trailerUrl,
+    handleClick,
+  };
 };
